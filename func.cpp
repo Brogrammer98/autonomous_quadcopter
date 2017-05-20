@@ -107,7 +107,7 @@ void btree::insert(int key)
   }
 }
 
-bool btree::searchbool(int key_val,node* searchnode)
+bool btree::searchbool(int key_val,node *searchnode)
 {
 	if(key_val==searchnode.key_value)
 	{
