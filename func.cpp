@@ -226,12 +226,12 @@ int astar(int x,int y,int goal)
 
 				tempo.keyval=curr_xpos+curr_ypos*width;curr_xpos+curr_ypos*width;
 				tempo.g =temp.g + astar_w1*(sqrt(pow(i,2)+pow(j,2))) ; // add distance here 
-				tempo.h = astar_w2*(sqrt(pow(curr_xpos-x,2)+pow(curr_ypos-y,2))) // distance from sucesso 
+				tempo.h = astar_w2*( abs(curr_xpos+i-x,2) + abs(curr_ypos+j-y,2) ); // distance from sucesso 
 				tempo.f=tempo.g+tempo.h;
 				node searchresopen = opentree.search_res(tempo.keyval);
 				node searchresclosed = closedtree.search_res(tempo.keyval);
 
-					//check this 
+					
 
 				if(opentree.search(tempo)&&searchresopen.f<tempo.f)
 					goto ifexit; // add jump here
