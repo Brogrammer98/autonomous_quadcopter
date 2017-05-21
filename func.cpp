@@ -28,25 +28,13 @@ class btree
 
 node *btree::minnode(node *tree)
 {
-	if(tree.left==nullptr&&tree.right==nullptr)
+	if(tree->left==nullptr)
 		return tree;
 	else
 	{
-		if(tree.left!=nullptr)
-		{
-			return minnode(tree.left);
-			else 
-			{
-				if(tree.right!=nullptr)
-				{
-					return minnode(tree.right);
-
-				}
-
-			}
-		}
+		return minnode(tree->left);
+	
 	}
-
 }
 
 btree::btree()
