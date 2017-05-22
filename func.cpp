@@ -13,28 +13,21 @@ class btree
         btree();
         ~btree();
 
-        void insert(node key);
-        bool searchbool(int key_val,node searchnode);
-        node *search_return_node(int key_val,node root);
-        void destroy_tree();
-        void parent_reorient(node curr, node parent );
-        node *minnode(btree tree);
-    private:
-        void destroy_tree(node *leaf);
-        void insert(int key, node *leaf);
-        node *search(int key, node *leaf);
+        void insert(node *leaf, node *rot);
+        bool search_bool(int key_val,node searchnode);
+        node *search_node(int key_val,node root);
+        node *minnode(node *root);
+        void destroy_leaf();
+
         node *root;
 };
 
-node *btree::minnode(node *tree)
+node *btree::minnode(node *root)
 {
-	if(tree->left==nullptr)
-		return tree;
+	if(root->left==nullptr)
+		return root;
 	else
-	{
-		return minnode(tree->left);
-	
-	}
+		return minnode(root->left);
 }
 
 btree::btree()
@@ -53,32 +46,36 @@ void btree::destroy_tree(node *leaf)
 }
 
 
-void btree::insert(node *leaf)
+void btree::insert(node *leaf,node *rot)
 {
-  if(key< leaf->key_value)
+  if(leaf->key_value<root->key_value)
   {
-    if(leaf->left!=NULL)
-     insert(key, leaf->left);
+    if(root->left!=NULL)
+     insert(leaf, root->left);
     else
     {
-      leaf->left=new node;
-      leaf->left->key_value=key;
-      leaf->left->left=NULL;    //Sets the left child of the child node to null
-      leaf->left->right=NULL;   //Sets the right child of the child node to null
+      root->left=leaf;
     }  
   }
-  else if(key>=leaf->key_value)
+  
+  if(leaf->key_value>root->key_value)
   {
-    if(leaf->right!=NULL)
-      insert(key, leaf->right);
+    if(root->right!=NULL)
+      insert(leaf, root->right);
     else
     {
-      leaf->right=new node;
-      leaf->right->key_value=key;
-      leaf->right->left=NULL;  //Sets the left child of the child node to null
-      leaf->right->right=NULL; //Sets the right child of the child node to null
+      root->right=leaf;
     }
   }
+
+  if(leaf->key_value==root->key_value)
+  {
+  	root->f=leaf->f;
+  	root->g=leaf->g;
+  	root->h=leaf->h;
+  	
+  }
+
 }
 
 
