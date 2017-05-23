@@ -41,7 +41,7 @@ btree::btree()
 
 void btree::insert(node *leaf,node *rot)
 {
-  if(leaf->key_value<rot->key_value)
+  if(leaf->f<rot->f)
   {
     if(rot->left!=NULL)
      insert(leaf, rot->left);
@@ -52,7 +52,7 @@ void btree::insert(node *leaf,node *rot)
     }  
   }
   
-  if(leaf->key_value>rot->key_value)
+  if(leaf->f>rot->f)
   {
     if(rot->right!=NULL)
       insert(leaf, rot->right);
@@ -63,7 +63,7 @@ void btree::insert(node *leaf,node *rot)
     }
   }
 
-  if(leaf->key_value==rot->key_value)
+  if(leaf->f==rot->f)
   {
   	rot->f=leaf->f;
   	rot->g=leaf->g;
@@ -228,14 +228,21 @@ int astar(int x,int y,int goal)
 			{ 
 				node *tempo;
 
-				tempo.keyval=curr_xpos+curr_ypos*width;curr_xpos+curr_ypos*width;
+
+
+				tempo.keyval=curr_xpos+curr_ypos*width;
 				tempo.g =temp.g + astar_w1*(sqrt(pow(i,2)+pow(j,2))) ; // add distance here 
 				tempo.h = astar_w2*( abs(curr_xpos+i-x,2) + abs(curr_ypos+j-y,2) ); // distance from sucesso 
 				tempo.f=tempo.g+tempo.h;
 				node *searchresopen = opentree.search_node(tempo.keyval);
 				node *searchresclosed = closedtree.search_node(tempo.keyval);
 
-					
+				if(curr_xpos+curr_ypos*width==goal)
+				{
+					tempo->parent=current_node;
+					closedtree.insert(tempo);
+					return;
+				}	
 
 				if(opentree.search_bool(tempo)&& (searchresopen->f<tempo->f))
 					goto ifexit; // add jump here
@@ -244,6 +251,8 @@ int astar(int x,int y,int goal)
 				tempo->parent=current_node;			
 				opentree.insert(tempo);
 
+
+
 				ifexit:;
 			}
 		}
@@ -251,7 +260,11 @@ int astar(int x,int y,int goal)
 	
 	current_node=opentree.minnode();
 	if(opentree.min()==NULL)
-		break;
+		{
+			return;
+			
+		}
+			
 	else
 	astar(   current_node->keyval%width, current_node->keyval-((current->keyval)%(width,goal))  ); 				   	
 }
