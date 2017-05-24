@@ -158,34 +158,90 @@ i am assuming that the tree is not self balancing
 
 void btree::destroy_leaf(node *leaf , node *rot)   
 {
+	if(leaf->f<rot->f)
+	{
+		if(rot->left!=NULL)
+		{
+			destroy_leaf(leaf,rot->left);
+			return;
+		}
 
-	if(leaf->key_value==rot->key_value)
-		{	if(rot->parent)
+		else 
+			return;
+	}
+	
+
+	else 
+	{
+		if(leaf->f>rot->f)
+		{
+			if(rot->right!=NULL)
 			{
-				root=rot->right;
-				delete rot ;
+				destroy_leaf(leaf,rot->right);
+				return;
+			}
+
+			else 
+			return;
+        }
+	
+	}
+
+	if((leaf->keyval==rot->keyval)&&(leaf->f==rot->f))
+	{
+		if(rot->left&&rot->right)
+		{
+			node *seed;
+			seed=minnode(rot->right);
+			rot->f=seed->f;
+			rot->keyval=seed->keyval;
+			rot->g=seed->g;
+			rot->h=seed->h;
+			destroy_leaf(seed,rot->right);
+			return;
+		}
+		else
+		{
+			if(!rot->left&&!rot->right)
+			{
+				delete rot;
 				return;
 			}
 			else
 			{
-				if(rot->parent->left==rot)
+				if(!rot->left&&rot->right)
+				{
+					if(rot==rot->parent->left)
 					{
 						rot->parent->left=rot->right;
-						node *temps=minnode(rot->right);
-						temps->left=rot->left;
 						delete rot;
-						delete leaf;
-						return;
-
+						return; 	
 					}
-
+					else
+					{
+						rot->parent->right=rot->right;
+						delete rot;
+						return;	
+					}
+				}
+				else
+				{
+					if(rot==rot->parent->left)
+					{
+						rot->parent->left=rot->left;
+						delete rot;
+						return; 	
+					}
+					else
+					{
+						rot->parent->right=rot->left;
+						delete rot;
+						return;	
+					}	
+				}
 			}
 		}
-	else if(leaf->key_value<rot->key_value)
-	{
-		destroy_leaf(leaf,rot->left);
-		return;
-	}	
+	}
 }
 
 node *current_node;
@@ -228,14 +284,12 @@ int astar(int x,int y,int goal)
 			{ 
 				node *tempo;
 
-
-
-				tempo.keyval=curr_xpos+curr_ypos*width;
-				tempo.g =temp.g + astar_w1*(sqrt(pow(i,2)+pow(j,2))) ; // add distance here 
-				tempo.h = astar_w2*( abs(curr_xpos+i-x,2) + abs(curr_ypos+j-y,2) ); // distance from sucesso 
-				tempo.f=tempo.g+tempo.h;
-				node *searchresopen = opentree.search_node(tempo.keyval);
-				node *searchresclosed = closedtree.search_node(tempo.keyval);
+				tempo->keyval=curr_xpos+curr_ypos*width;
+				tempo->g =temp->g + astar_w1*(sqrt(pow(i,2)+pow(j,2))) ; // add distance here 
+				tempo->h = astar_w2*( abs(curr_xpos+i-x,2) + abs(curr_ypos+j-y,2) ); // distance from sucesso 
+				tempo->f=tempo->g+tempo->h;
+				node *searchresopen = opentree.search_node(tempo->keyval);
+				node *searchresclosed = closedtree.search_node(tempo->keyval);
 
 				if(curr_xpos+curr_ypos*width==goal)
 				{
@@ -251,15 +305,13 @@ int astar(int x,int y,int goal)
 				tempo->parent=current_node;			
 				opentree.insert(tempo);
 
-
-
 				ifexit:;
 			}
 		}
 	} 
 	
 	current_node=opentree.minnode();
-	if(opentree.min()==NULL)
+	if(opentree->min()==NULL)
 		{
 			return;
 			
