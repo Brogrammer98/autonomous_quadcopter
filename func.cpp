@@ -274,6 +274,12 @@ location_node->key_value=curr_xpos+curr_ypos*width;
 
 btree opentree_f,closedtree,opentree_keyval;
 
+opentree_f.root=location_node;
+opentree_keyval.root=location_node;
+closedtree.root=location_node;
+
+
+
 for(int i=0;i<height*width;i++)
 {
 	if(map_data[i]!=0)
@@ -311,12 +317,15 @@ int astar(int x,int y,int goal)
 				tempo->g =temp->g + astar_w1*(sqrt(pow(i,2)+pow(j,2))) ; // add distance here 
 				tempo->h = astar_w2*( abs(curr_xpos+i-x,2) + abs(curr_ypos+j-y,2) ); // distance from sucesso 
 				tempo->f=tempo->g+tempo->h;
+				
+
 				node *searchresopen = opentree_keyval.search_node(tempo->keyval,location_node);
 				node *searchresclosed = closedtree.search_node(tempo->keyval,location_node);
 
+				
 				if(curr_xpos+curr_ypos*width==goal)
 				{
-					tempo->parent=current_node;
+					tempo->route_parent=current_node;
 					closedtree.insert(tempo,location_node);
 					return;
 				}	
