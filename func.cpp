@@ -39,7 +39,7 @@ btree::btree()
 }
 
 
-void btree::insert(node *leaf,node *rot)
+void btree::insert_f(node *leaf,node *rot)
 {
   if(leaf->f<rot->f)
   {
@@ -52,7 +52,32 @@ void btree::insert(node *leaf,node *rot)
     }  
   }
   
-  if(leaf->f>rot->f)
+  if(leaf->f>=rot->f)
+  {
+    if(rot->right!=NULL)
+      insert(leaf, rot->right);
+    else
+    {
+      rot->right=leaf;
+      leaf->tree_parent=rot;
+    }
+  }
+}
+
+void btree::insert_keyval(node *leaf,node *rot)
+{
+  if(leaf->keyval<rot->keyval)
+  {
+    if(rot->left!=NULL)
+     insert(leaf, rot->left);
+    else
+    {
+      rot->left=leaf;
+      leaf->tree_parent=rot;
+    }  
+  }
+  
+  if(leaf->keyval>rot->keyval)
   {
     if(rot->right!=NULL)
       insert(leaf, rot->right);
@@ -63,7 +88,7 @@ void btree::insert(node *leaf,node *rot)
     }
   }
 
-  if(leaf->f==rot->f)
+  if(leaf->keyval==rot->keyval)
   {
   	rot->f=leaf->f;
   	rot->g=leaf->g;
@@ -72,7 +97,6 @@ void btree::insert(node *leaf,node *rot)
   }
 
 }
-
 
 
 
@@ -211,30 +235,30 @@ void btree::destroy_leaf(node *leaf , node *rot)
 			{
 				if(!rot->left&&rot->right)
 				{
-					if(rot==rot->parent->left)
+					if(rot==rot->tree_parent->left)
 					{
-						rot->parent->left=rot->right;
+						rot->tree_parent->left=rot->right;
 						delete rot;
 						return; 	
 					}
 					else
 					{
-						rot->parent->right=rot->right;
+						rot->tree_parent->right=rot->right;
 						delete rot;
 						return;	
 					}
 				}
 				else
 				{
-					if(rot==rot->parent->left)
+					if(rot==rot->tree_parent->left)
 					{
-						rot->parent->left=rot->left;
+						rot->tree_parent->left=rot->left;
 						delete rot;
 						return; 	
 					}
 					else
 					{
-						rot->parent->right=rot->left;
+						rot->tree_parent->right=rot->left;
 						delete rot;
 						return;	
 					}	
@@ -244,12 +268,11 @@ void btree::destroy_leaf(node *leaf , node *rot)
 	}
 }
 
-node *current_node;
+node *current_node,*location_node;
 current_node->key_value=curr_xpos+curr_ypos*width;
+location_node->key_value=curr_xpos+curr_ypos*width;
 
-btree opentree,closedtree;
-
-int openlist_memcount=0,closedlist_memcount=0;
+btree opentree_f,closedtree,opentree_keyval;
 
 for(int i=0;i<height*width;i++)
 {
@@ -271,7 +294,7 @@ int astar(int x,int y,int goal)
 	node *temp;	
 	temp->key_value=curr_xpos+curr_ypos*width;
 	
-	closedtree.insert(current_node);
+	closedtree.insert(location_node);
 
     
 	int t=0;
@@ -288,29 +311,30 @@ int astar(int x,int y,int goal)
 				tempo->g =temp->g + astar_w1*(sqrt(pow(i,2)+pow(j,2))) ; // add distance here 
 				tempo->h = astar_w2*( abs(curr_xpos+i-x,2) + abs(curr_ypos+j-y,2) ); // distance from sucesso 
 				tempo->f=tempo->g+tempo->h;
-				node *searchresopen = opentree.search_node(tempo->keyval);
-				node *searchresclosed = closedtree.search_node(tempo->keyval);
+				node *searchresopen = opentree_keyval.search_node(tempo->keyval,location_node);
+				node *searchresclosed = closedtree.search_node(tempo->keyval,location_node);
 
 				if(curr_xpos+curr_ypos*width==goal)
 				{
 					tempo->parent=current_node;
-					closedtree.insert(tempo);
+					closedtree.insert(tempo,location_node);
 					return;
 				}	
 
-				if(opentree.search_bool(tempo)&& (searchresopen->f<tempo->f))
+				if(opentree_keyval.search_bool(tempo)&& (searchresopen->f<tempo->f))
 					goto ifexit; // add jump here
 				if(closedtree.search_bool(tempo)&&(searchresopen->f<tempo->f))
 					goto ifexit; // add jump here
-				tempo->parent=current_node;			
-				opentree.insert(tempo);
+				tempo->route_parent=current_node;			
+				opentree_keyval.insert_keyval(tempo,location_node);
+				opentree_f.insert_f(tempo,location_node);
 
 				ifexit:;
 			}
 		}
 	} 
 	
-	current_node=opentree.minnode();
+	current_node=opentree.minnode(location_node);
 	if(opentree->min()==NULL)
 		{
 			return;
