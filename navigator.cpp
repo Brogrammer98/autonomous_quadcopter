@@ -33,8 +33,8 @@ const float pi = 3.14159265;
 const float RAD_TO_DEG = 180.0/pi;
 const float DEG_TO_RAD = pi/180.0;
 
-int    width      = 100; 
-int    height     = 100;
+int    width      = 500; 
+int    height     = 500;
 
 int goal_x,goal_y;
 
@@ -43,22 +43,10 @@ int startypos = 0;
 
 bool path_found = true;
 
-float  map_res = 0.05;
+float  map_res = 0.25;
 
 int stop_xpos(49);
 int stop_ypos(99);
-
-float curr_head   = 0;
-float last_head   = 0;
-float curr_xpos   = 0;
-float curr_ypos   = 0;
-float distance_to_plan = 10.0;
-
-std::list<int> fullpathx;
-std::list<int> fullpathy;
-
-std::list<double> sm_pathx;
-std::list<double> sm_pathy;   
 
 float  *map_data   = NULL;
 
@@ -66,22 +54,15 @@ int w1 = 10;
 int w2 = 0;
 int w3 =35;
 
-
-
 bool map_received=false, goal_set=false, currhead_received=false;
 bool new_path_required=false, newmap_set=false;
 
-
 Mat mapImgn;
-
-
 
 ros::Publisher map_pub,blown_map_pub;
 
-
 pair<float,float> convToCart(int i,float r)
 {
-
    float ang = i*0.25*(3.14/180);
    float x = r*cos(ang);
    float y = -1*r*sin(ang);
@@ -93,14 +74,14 @@ void set_goal()  // <----- add some aruments here    optimise this by exact loca
 {
    std::cout<<"Run1";
   
-  if (map_received == true && currhead_received == true && goal_set == false)
+  if (map_received == true && currhead_received == true && goal_set == false) // <- how or where to assign these boolean values ?
   {
     float des_head=0; 
     des_head = waypointdata->angle;   // angle is made with the vertical 
 
     if (goal_y >= 0)
     {
-      stop_ypos = int((distance_to_plan*cos((curr_head-des_head)*DEG_TO_RAD))/map_res);
+      stop_ypos = goal_y;
       
       if (stop_ypos >= height)
        stop_ypos = height - 1;    // fixed it at the top if it is outta bounds 

@@ -15,17 +15,22 @@ class btree
         btree();
         ~btree();
 
-        void insert(node *leaf, node *rot);
+        void insert(node *leaf, node *root);
         bool search_bool(int key_val,node searchnode);
-        node *search_node(int key_val,node rot);
-        node *minnode(node *rot);
-        node *restructure_tree(int key,node *rot);
+        node *search_node(int key_val,node root);
+        node *minnode(node *root);
+        node *restructure_tree(int key,node *root);
         void destroy_leaf();
 
         node *root;
 };
 
-node *btree::minnode(node *rot)
+btree::btree()
+{
+  root=NULL;
+}	
+
+node *btree::minnode(node *rot=this->root)
 {
 	if(rot->left==NULL)
 		return rot;
@@ -33,13 +38,10 @@ node *btree::minnode(node *rot)
 		return minnode(rot->left);
 }
 
-btree::btree()
-{
-  root=NULL;
-}
 
 
-void btree::insert_f(node *leaf,node *rot)
+
+void btree::insert_f(node *leaf,node *rot=this->root)
 {
   if(leaf->f<rot->f)
   {
@@ -64,7 +66,7 @@ void btree::insert_f(node *leaf,node *rot)
   }
 }
 
-void btree::insert_keyval(node *leaf,node *rot)
+void btree::insert_keyval(node *leaf,node *rot=this->root)
 {
   if(leaf->keyval<rot->keyval)
   {
@@ -100,12 +102,11 @@ void btree::insert_keyval(node *leaf,node *rot)
 
 
 
-bool btree::search_bool(node leaf,node *rot)
+bool btree::search_bool(node leaf,node *rot=this->root)
 {
 	if(leaf->key_value==rot->key_value)
-	{
 		return true;
-	}
+	
 	else
 	{
 		if(rot->right==rot->left==NULL)
@@ -117,22 +118,20 @@ bool btree::search_bool(node leaf,node *rot)
      		if(leaf->key_value>rot->key_value)
      		{
      			if(rot->right!=NULL)
-     			{
      				return search_bool(leaf,rot->right);
-     			}
+     			
      		}
      		else 
      		{
      			if(rot->left!=NULL)
-     			{
      				return search_bool(leaf,rot->left);
-     			}
+     			
      		}
      	}     	
 	}
 }
 
-node *btree::search_return_node(node *leaf,node *rot)
+node *btree::search_return_node(node *leaf,node *rot=this->root)
 {
 	if(leaf->key_value==rot->key_value)
 	{
@@ -180,7 +179,7 @@ i am assuming that the tree is not self balancing
 
 
 
-void btree::destroy_leaf(node *leaf , node *rot)   
+void btree::destroy_leaf(node *leaf , node *rot=this->root)   
 {
 	if(leaf->f<rot->f)
 	{
@@ -229,37 +228,53 @@ void btree::destroy_leaf(node *leaf , node *rot)
 			if(!rot->left&&!rot->right)
 			{
 				delete rot;
+				this->root=NULL;
 				return;
 			}
 			else
 			{
 				if(!rot->left&&rot->right)
 				{
+					if(!rot->parent)
+					{
+						root=root->right;
+						delete rot;
+						return;
+					}
 					if(rot==rot->tree_parent->left)
 					{
+						node *temps;
+						temps=rot;
 						rot->tree_parent->left=rot->right;
-						delete rot;
+						delete temps;
 						return; 	
 					}
-					else
+					if(rot==rot->tree_parent->right)
 					{
+						node *temps;
+						temps=rot;
 						rot->tree_parent->right=rot->right;
-						delete rot;
+						delete temps;
 						return;	
 					}
+
 				}
 				else
 				{
 					if(rot==rot->tree_parent->left)
 					{
+						node *temps;
+						temps=rot;
 						rot->tree_parent->left=rot->left;
-						delete rot;
+						delete temps;
 						return; 	
 					}
 					else
 					{
+						node *temps;
+						temps=rot;
 						rot->tree_parent->right=rot->left;
-						delete rot;
+						delete temps;
 						return;	
 					}	
 				}
@@ -288,7 +303,7 @@ for(int i=0;i<height*width;i++)
 		temp.key_value=i;
 		closedtree.insert(temp);
 
-	}
+	}+
 	
 }
 
@@ -303,7 +318,13 @@ int astar(int x,int y,int goal)
 	closedtree.insert(location_node);
 
     
-	int t=0;
+	if(!current_node)
+		return;
+	else
+	{
+
+		curr_xpos=current_node->keyval%width;
+		curr_ypos=(int)(current_node->keyval/width);
 
 	for(int i=-1;i<=1;i++)
 	{
@@ -311,22 +332,29 @@ int astar(int x,int y,int goal)
 		{
 			if(curr_ypos+j>=0&&curr_xpos+i>=0&&curr_xpos+i<width&&curr_ypos+j<height)
 			{ 
-				node *tempo;
+				node *tempo,*tempo_mirror;
 
 				tempo->keyval=curr_xpos+curr_ypos*width;
-				tempo->g =temp->g + astar_w1*(sqrt(pow(i,2)+pow(j,2))) ; // add distance here 
+				tempo_mirror->keyval=curr_xpos+curr_ypos*width;
+				
+				tempo->g =temp->g + astar_w1*(sqrt(pow(i,2)+pow(j,2))) ;
+				tempo_mirror->g =temp->g + astar_w1*(sqrt(pow(i,2)+pow(j,2))) ; // add distance here 
+				
 				tempo->h = astar_w2*( abs(curr_xpos+i-x,2) + abs(curr_ypos+j-y,2) ); // distance from sucesso 
+				tempo_mirror->h = astar_w2*( abs(curr_xpos+i-x,2) + abs(curr_ypos+j-y,2) ); // distance from sucesso 
+				
 				tempo->f=tempo->g+tempo->h;
+				tempo_mirror->f=tempo->g+tempo->h;
 				
 
-				node *searchresopen = opentree_keyval.search_node(tempo->keyval,location_node);
-				node *searchresclosed = closedtree.search_node(tempo->keyval,location_node);
+				node *searchresopen = opentree_keyval.search_node(tempo->keyval);
+				node *searchresclosed = closedtree.search_node(tempo->keyval);
 
 				
 				if(curr_xpos+curr_ypos*width==goal)
 				{
 					tempo->route_parent=current_node;
-					closedtree.insert(tempo,location_node);
+					closedtree.insert(tempo);
 					return;
 				}	
 
@@ -334,23 +362,21 @@ int astar(int x,int y,int goal)
 					goto ifexit; // add jump here
 				if(closedtree.search_bool(tempo)&&(searchresopen->f<tempo->f))
 					goto ifexit; // add jump here
-				tempo->route_parent=current_node;			
-				opentree_keyval.insert_keyval(tempo,location_node);
-				opentree_f.insert_f(tempo,location_node);
+				tempo->route_parent=current_node;
+				tempo_mirror->route_parent=current_node;
+							
+				opentree_keyval.insert_keyval(tempo_mirror);
+				opentree_f.insert_f(tempo);
 
 				ifexit:;
 			}
 		}
 	} 
 	
-	current_node=opentree.minnode(location_node);
-	if(opentree->min()==NULL)
-		{
-			return;
-			
-		}
-			
-	else
+	current_node=opentree.minnode();
+	
 	astar(   current_node->keyval%width, current_node->keyval-((current->keyval)%(width,goal))  ); 				   	
+
+    }
 }
 
