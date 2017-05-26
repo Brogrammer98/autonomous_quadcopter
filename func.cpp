@@ -1,3 +1,47 @@
+#include "ros/ros.h"
+#include "std_msgs/Float32MultiArray.h"
+#include "std_msgs/Bool.h"
+#include "geometry_msgs/PoseWithCovarianceStamped.h"
+#include "std_msgs/Float64.h"
+#include "nav_msgs/OccupancyGrid.h"
+#include "nav_msgs/Odometry.h"
+#include "geometry_msgs/Pose2D.h"
+
+#include <cstddef>
+#include <functional>
+#include <queue>
+#include <vector>
+#include <list>
+#include <deque>
+
+#include "a_star/waypoint_data.h"
+#include "a_star/pathdata_array.h"
+
+#include "opencv2/core/core.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
+#include "opencv2/highgui/highgui.hpp"
+
+#include <math.h>
+#include <time.h>
+#include <stdio.h>
+#include <iostream>
+
+using namespace cv;
+using namespace std;
+
+const float pi = 3.14159265;
+const float RAD_TO_DEG = 180.0/pi;
+const float DEG_TO_RAD = pi/180.0;
+
+int    width      = 500; 
+int    height     = 500;
+
+
+float  map_data[] = NULL;
+
+int w1 = 10;
+int w2 = 0;
+int w3 =35;
 struct node
 {
   int key_value;
@@ -237,7 +281,7 @@ void btree::destroy_leaf(node *leaf , node *rot=this->root)
 				{
 					if(!rot->parent)
 					{
-						root=root->right;
+						this->root=this->root->right;
 						delete rot;
 						return;
 					}
@@ -293,7 +337,8 @@ opentree_f.root=location_node;
 opentree_keyval.root=location_node;
 closedtree.root=location_node;
 
-
+float path_vector[height*width];
+int path_vector_count=0;
 
 for(int i=0;i<height*width;i++)
 {
@@ -303,13 +348,13 @@ for(int i=0;i<height*width;i++)
 		temp.key_value=i;
 		closedtree.insert(temp);
 
-	}+
+	}
 	
 }
 
 float astar_w1=0,astar_w2=0;
 
-int astar(int x,int y,int goal)
+void astar(int curr_xpos,int curr_ypos,int goal)
 {
  
 	node *temp;	
@@ -355,6 +400,20 @@ int astar(int x,int y,int goal)
 				{
 					tempo->route_parent=current_node;
 					closedtree.insert(tempo);
+
+					node *tempx;
+					tempx=tempo;
+					do
+					{
+						path_vector[path_vector_count++]=tempx->keyval;
+
+					}while(tempx->route_parent!=NULL)	
+
+					for(int i=0;i<path_vector_count;i++)
+					{
+						cout<path_vector[i]<<"   ";
+					}
+
 					return;
 				}	
 
@@ -375,8 +434,23 @@ int astar(int x,int y,int goal)
 	
 	current_node=opentree.minnode();
 	
-	astar(   current_node->keyval%width, current_node->keyval-((current->keyval)%(width,goal))  ); 				   	
+	astar(   current_node->keyval%width, current_node->keyval-(current->keyval)%(width) ,goal  ); 				   	
 
     }
 }
 
+int main()
+{
+	for(int i=0;i<250000;i++)
+	{
+		map_data[i]=0;
+	}
+
+	for (int i = 0; i < 250; ++i)
+	{
+		map_data[i+100000]=1;
+	}
+	
+astar(0,0,200250);
+
+} 	 		 
