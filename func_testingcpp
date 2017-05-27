@@ -136,7 +136,7 @@ bool btree::search_bool(node *leaf,node *rot)
 
   else
   {
-    if(rot->right==rot->left==NULL)
+    if(rot->right==NULL&&rot->left==NULL)
     {
       return false;
     }
@@ -146,12 +146,16 @@ bool btree::search_bool(node *leaf,node *rot)
         {
           if(rot->right!=NULL)
             return search_bool(leaf,rot->right);
+          else
+                    return false;
 
         }
         else
         {
           if(rot->left!=NULL)
             return search_bool(leaf,rot->left);
+          else
+          return false;
 
         }
       }
@@ -166,7 +170,7 @@ node *btree::search_node(node *leaf,node *rot)
   }
   else
   {
-    if(rot->right==rot->left==NULL)
+    if(rot->right==NULL&&rot->left==NULL)
     {
       return NULL;
     }
@@ -178,6 +182,8 @@ node *btree::search_node(node *leaf,node *rot)
           {
             return search_node(leaf,rot->right);
           }
+          else
+          return NULL;
         }
         else
         {
@@ -185,6 +191,8 @@ node *btree::search_node(node *leaf,node *rot)
           {
             return search_node(leaf,rot->left);
           }
+          else
+          return NULL;
         }
       }
   }
@@ -200,6 +208,8 @@ i am assuming that the tree is not self balancing
 ***********************************************************************************
 
 */
+
+
 
 
 
@@ -381,7 +391,7 @@ void astar(node *current_node,int goal)
 
         if(opentree_keyval.search_bool(&tempo,opentree_keyval.root)&& (searchresopen->f<tempo.f))
           goto ifexit; // add jump here
-        if(closedtree.search_bool(&tempo,closedtree.root)&&(searchresopen->f<tempo.f))
+        if(closedtree.search_bool(&tempo,closedtree.root)&&(searchresclosed->f<tempo.f))
           goto ifexit; // add jump here
         tempo.route_parent=current_node;
         tempo_mirror.route_parent=current_node;
@@ -413,15 +423,16 @@ int main()
     map_data[i+100000]=1;
   }
 
-    while(i<250000)
+int t=0;
+    while(t<250000)
     {
-   if(map_data[i]!=0)
+   if(map_data[t]!=0)
     {
     node temp;
-    temp.key_value=i;
+    temp.key_value=t;
     closedtree.insert_keyval(&temp,closedtree.root);
       }
-     i+=1;
+     t+=1;
     }
 
 
