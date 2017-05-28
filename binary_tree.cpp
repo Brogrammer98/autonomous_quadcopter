@@ -271,11 +271,15 @@ void btree::destroy_leaf_keyval(int key , node *rot)
 
 		if(!rot->left&&!rot->right)
 		{
-			delete rot;
+			rot=NULL;
 			return;
 		}
 		else
 		{
+			if(!rot->right)
+				return;
+			else
+			{	
 			node *seed;
 			seed=new node;
 			seed=minnode(rot->right);
@@ -285,6 +289,7 @@ void btree::destroy_leaf_keyval(int key , node *rot)
 			rot->h=seed->h;
 			destroy_leaf_keyval(seed->key_value,rot->right);
 			return;
+			}
 		}
     }
 }
