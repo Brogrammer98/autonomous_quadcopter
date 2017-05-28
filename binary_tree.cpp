@@ -272,6 +272,7 @@ void btree::destroy_leaf_keyval(int key , node *rot)
 		if(!rot->left&&!rot->right)
 		{
 			rot=NULL;
+			free(rot);
 			return;
 		}
 		else
