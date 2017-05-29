@@ -36,8 +36,10 @@ class btree
         	void insert_f(int key,int fval,int gval,int hval,node *rot);
         	node *minnode(node *rot);
         	bool search_bool(int key,node *rot);
+        	bool search_keyval_fval_comp(int key,int fval, int *rot);
         	node *search_node(int key,node *rot);
         	void destroy_leaf_keyval(int key , node *rot);
+
         	node *root;
 };
 
@@ -203,6 +205,43 @@ bool btree::search_bool(int key,node *rot)
 	}
 }
 
+bool btree::search_keyval_fval_comp(int key,int fval, int *rot)
+{
+
+	if(key==rot->key_value)
+       {
+       	if(fval<rot->f)
+        return true;
+
+    	else 
+    	return false;	
+       }
+
+	else
+	{
+		if(rot->right==NULL&&rot->left==NULL)
+		{
+			return false;
+		}
+     	else
+     	{
+     		if(key>rot->key_value)
+     		{
+     			if(rot->right!=NULL)
+     				return search_keyval_fval_comp(key,rot->right);
+                else
+     			return false;
+     		}
+     		else
+     		{
+     			if(rot->left!=NULL)
+     				return search_keyval_fval_comp(key,rot->left);
+     			else
+     			return false;
+     		}
+     	}
+	}	
+}
 node *btree::search_node(int key,node *rot)
 {
 
