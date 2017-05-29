@@ -31,7 +31,7 @@ void astar(node *current_node,int goal)
         }
       }
     }
-   closedtree.insert_keyval(current_node->key_value,closedtree.root);
+   closedtree.insert_keyval(current_node->key_value,current_node->f,current_node->g,current_node->h,current_node->route_parent_key,closedtree.root);
    opentree_keyval.destroy_leaf_keyval(current_node->key_value,opentree_keyval.root);
    opentree_f.destroy_leaf_fval(current_node->key_value,current_node->f,opentree_f.root);
    
