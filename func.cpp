@@ -365,8 +365,7 @@ void btree::destroy_leaf_keyval(int key , node *rot)
              rot=NULL;
 
              delete rot;
-             free(rot);
-
+             
 			return;
 		}
 		else
