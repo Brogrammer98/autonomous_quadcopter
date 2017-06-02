@@ -1,0 +1,9 @@
+float astar_w1=0,astar_w2=0;
+
+int astar(node *current_node,int goal)
+{
+ 
+  
+
+
+}  

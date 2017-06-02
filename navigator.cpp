@@ -98,7 +98,8 @@ void set_goal()  // <----- add some aruments here    optimise this by exact loca
     stop_xpos = (width/2-1) + goal_x;
 
     if (stop_xpos >= width)
-      { stop_xpos = width-1;}
+       stop_xpos = width-1;
+    
     if (stop_xpos < 0) 
       {
         yaw(10);
