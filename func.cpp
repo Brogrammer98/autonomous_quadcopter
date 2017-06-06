@@ -1,17 +1,8 @@
-#include <cstddef>
-#include <functional>
-#include <queue>
-#include <vector>
-#include <list>
-#include <deque>
-#include <console_bridge/console.h>
-#include <unistd.h>
+
 #include <stdio.h>
 #include <iostream>
 #include <math.h>
 #include <stdlib.h>
-#include <memory.h>
-
 
 int INT_MAX =9999999;
 
@@ -25,7 +16,7 @@ int    width      = 500;
 int    height     = 500;
 
 
-float  map_data[250000];
+int map_data[250000];
 
 int w1 = 10;
 int w2 = 0;
@@ -445,7 +436,7 @@ void btree::destroy_leaf_f(int key,int fval , node *rot)
     }
   }
 }
-int u=0;
+//int u=0;
 bool btree::search_keyval_fval_comp(int key,int fval, node *rot)
 {
  if(key==rot->key_value)
@@ -533,7 +524,7 @@ void astar(node *current_node,int goal,btree &opentree_f,btree &opentree_keyval,
     else
     {
      //cout<<"next node is"<<temps->key_value<<endl;
-     u+=1;
+    // u+=1;
      //cout<<u<<endl;
      astar(temps,goal,opentree_f,opentree_keyval,closedtree,master_tree);
      return;
@@ -555,16 +546,16 @@ btree opentree_f,closedtree,opentree_keyval,master_tree;
  master_tree.root=&second;
 /*
 -------------------------------------------------------------------------------------------
-  instead of the foollowing lines of code add code that makes map_data[iterator]=1 where 
+  instead of the foollowing lines of code add code that makes map_data[iterator]=1 where
              obstacle is there
----------------------------------------------------------------------------------------------                
+---------------------------------------------------------------------------------------------
 
 
 
  for(int i=0;i<250000;i++)
     map_data[i]=0;
 
-  for (int i =0; i < 200; ++i)  
+  for (int i =0; i < 200; ++i)
     map_data[i+100000]=1;
 */
     int i=0;
