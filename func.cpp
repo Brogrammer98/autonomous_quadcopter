@@ -12,11 +12,11 @@ const float pi = 3.14159265;
 const float RAD_TO_DEG = 180.0/pi;
 const float DEG_TO_RAD = pi/180.0;
 
-int    width      = 500;
-int    height     = 500;
+int    width      = 10;
+int    height     = 10;
 
 
-int map_data[250000];
+int map_data[900];
 
 int w1 = 10;
 int w2 = 0;
@@ -25,8 +25,8 @@ int w3 =35;
 struct node
 {
   int64_t key_value;
-  int route_parent_key;
-  int f=0,g=0,h=0;
+  int route_parent_key=0;
+  float f=0,g=0,h=0;
   node *tree_parent=nullptr;
   node *left=nullptr;
   node *right=nullptr;
@@ -50,14 +50,14 @@ class btree
 {
     public:
           btree();
-          void insert_keyval(int key,int fval,int gval,int hval,node *rot);
-          void insert_keyval(int key,int fval,int gval,int hval,int rp,node *rot);
+          void insert_keyval(int key,float fval,float gval,float hval,node *rot);
+          void insert_keyval(int key,float fval,float gval,float hval,int rp,node *rot);
           void destroy_leaf_keyval(int key , node *rot);
-          void insert_f(int key,int fval,int gval,int hval,node *rot);
-          void destroy_leaf_f(int key,int fval , node *rot);
+          void insert_f(int key,float fval,float gval,float hval,node *rot);
+          void destroy_leaf_f(int key,float fval , node *rot);
 
           bool search_bool(int key,node *rot);
-          bool search_keyval_fval_comp(int key,int fval,node *rot);
+          bool search_keyval_fval_comp(int key,float fval,node *rot);
           node *search_node(int key,node *rot);
           node *minnode(node *rot);
           node *root;
@@ -76,7 +76,7 @@ node *btree::minnode(node *rot)
   else
     return minnode(rot->left);
 }
-void btree::insert_keyval(int key,int fval,int gval,int hval,int rp,node *rot)
+void btree::insert_keyval(int key,float fval,float gval,float hval,int rp,node *rot)
 {
 
   if(rot==nullptr)
@@ -142,7 +142,7 @@ void btree::insert_keyval(int key,int fval,int gval,int hval,int rp,node *rot)
   }
 }
 
-void btree::insert_keyval(int key,int fval,int gval,int hval,node *rot)
+void btree::insert_keyval(int key,float fval,float gval,float hval,node *rot)
 {
  if(rot==nullptr)
  {
@@ -202,7 +202,7 @@ void btree::insert_keyval(int key,int fval,int gval,int hval,node *rot)
   }
 }
 
-void btree::insert_f(int key,int fval,int gval,int hval,node *rot)
+void btree::insert_f(int key,float fval,float gval,float hval,node *rot)
 {
  if(rot==nullptr)
   {
@@ -372,7 +372,7 @@ void btree::destroy_leaf_keyval(int key , node *rot)
 }
 
 
-void btree::destroy_leaf_f(int key,int fval , node *rot)
+void btree::destroy_leaf_f(int key,float fval , node *rot)
 {
  if(fval<rot->f)
   {
@@ -412,9 +412,11 @@ void btree::destroy_leaf_f(int key,int fval , node *rot)
        //cout<<"an exact hit found "<<key<<endl;
        node *seed;
        seed=new node;
-       if(!rot->right)
-       goto jumpo;
 
+       if(!rot->right)
+       {//cout<<"yolo bitch "<<endl;
+       goto jumpo;
+    }
        seed=minnode(rot->right);
 
        rot->f=seed->f;
@@ -426,7 +428,9 @@ void btree::destroy_leaf_f(int key,int fval , node *rot)
        goto pop;
        jumpo:
        if((rot->tree_parent->right=rot)&&rot->tree_parent!=nullptr)
+        {//cout<<endl<<"howdy"<<endl;
         rot->tree_parent->right=nullptr;
+        }
        if((rot->tree_parent->left=rot)&&rot->tree_parent!=nullptr)
         rot->tree_parent->left=nullptr;
        pop:
@@ -437,7 +441,7 @@ void btree::destroy_leaf_f(int key,int fval , node *rot)
   }
 }
 //int u=0;
-bool btree::search_keyval_fval_comp(int key,int fval, node *rot)
+bool btree::search_keyval_fval_comp(int key,float fval, node *rot)
 {
  if(key==rot->key_value)
   {
@@ -471,14 +475,14 @@ bool btree::search_keyval_fval_comp(int key,int fval, node *rot)
 }
 
 void astar(node *current_node,int goal,btree &opentree_f,btree &opentree_keyval,btree &closedtree,btree &master_tree)
-{
+{//cout<<1<<endl;
  int curr_xpos=(int)current_node->key_value%width;
  int curr_ypos=(current_node->key_value-curr_xpos)/width;
  //gotoxy(curr_xpos,curr_ypos);
- //cout<<"("<<curr_xpos<<","<<curr_ypos<<")"<<endl;
+ cout<<"("<<curr_xpos<<","<<curr_ypos<<")"<<endl<<endl;
  if(current_node->key_value==goal)
   {
-   cout<<"goal has been found ";
+   //cout<<"goal has been found ";
    return;
   }
  else
@@ -487,7 +491,8 @@ void astar(node *current_node,int goal,btree &opentree_f,btree &opentree_keyval,
    {
     for(int j=-1;j<=1;j++)
      {
-       int key,fl,gl,hl;
+       int key;
+       float fl,gl,hl;
        key=(curr_xpos+i)+width*(curr_ypos+j);
        if( (curr_ypos+j>=0&&curr_xpos+i>=0&&curr_xpos+i<width&&curr_ypos+j<height)&&!(i==0&&j==0))
         {
@@ -496,25 +501,31 @@ void astar(node *current_node,int goal,btree &opentree_f,btree &opentree_keyval,
             gl =current_node->g +sqrt( pow(i,2) + pow(j,2) ) ;// distance from sucesso
             hl =sqrt(pow((goal%width-curr_xpos-i),2) + pow((goal/width-curr_ypos-j),2)) ;
             fl =gl+hl;
+            //cout<<2<<endl;
+            cout<<"("<<curr_xpos+i<<","<<curr_ypos+j<<")    "<<fl<<endl;
             opentree_keyval.insert_keyval(key,fl,gl,hl,opentree_keyval.root);
             opentree_f.insert_f(key,fl,gl,hl,opentree_f.root);
+            master_tree.insert_keyval(key,fl,gl,hl,current_node->key_value,master_tree.root);
            }
         }
      }
   }
-   //cout<<"shifting to closed list "<<curr_xpos<<","<<curr_ypos<<endl;
+  cout<<"----------------------------"<<endl;
+  //cout<<3<<endl;
+     //cout<<"shifting to closed list "<<curr_xpos<<","<<curr_ypos<<endl;
    closedtree.insert_keyval(current_node->key_value,current_node->f,current_node->g,current_node->h,current_node->route_parent_key,closedtree.root);
-   //cout<<"1"<<endl;
+   //cout<<4<<endl;
    opentree_keyval.destroy_leaf_keyval(current_node->key_value,opentree_keyval.root);
-   //cout<<"2"<<endl;
+   //cout<<"5   "<<current_node->key_value<<endl;
    opentree_f.destroy_leaf_f(current_node->key_value,current_node->f,opentree_f.root);
    //cout<<"3"<<endl;
    //cout<<"-----------------------------------"<<endl;
    node *temps;
 //usleep(1000000);
-
+//cout<<6<<endl;
    temps=new node;
    temps=opentree_f.minnode(opentree_f.root);
+   //cout<<7<<endl;
  //  usleep(50000);
    if(!temps)
     {
@@ -526,6 +537,7 @@ void astar(node *current_node,int goal,btree &opentree_f,btree &opentree_keyval,
      //cout<<"next node is"<<temps->key_value<<endl;
     // u+=1;
      //cout<<u<<endl;
+//cout<<8<<endl;
      astar(temps,goal,opentree_f,opentree_keyval,closedtree,master_tree);
      return;
     }
@@ -544,22 +556,30 @@ btree opentree_f,closedtree,opentree_keyval,master_tree;
  second.key_value=0;
  closedtree.root=&first;
  master_tree.root=&second;
+
+node faker,faker2,faker3;
+faker.key_value=0;
+faker2.key_value=0;
+faker3.key_value=0;
+opentree_f.root=&faker;
+opentree_keyval.root=&faker2;
+master_tree.root=&faker3;
 /*
 -------------------------------------------------------------------------------------------
   instead of the foollowing lines of code add code that makes map_data[iterator]=1 where
              obstacle is there
 ---------------------------------------------------------------------------------------------
+*/
 
 
-
- for(int i=0;i<250000;i++)
+ for(int i=0;i<100;i++)
     map_data[i]=0;
 
-  for (int i =0; i < 200; ++i)
-    map_data[i+100000]=1;
-*/
+  for (int i =0; i < 9; ++i)
+    map_data[i+10]=1;
+
     int i=0;
-    while(i<250000)
+    while(i<900)
     {
 
      if(map_data[i]!=0)
@@ -569,14 +589,16 @@ btree opentree_f,closedtree,opentree_keyval,master_tree;
      i+=1;
     }
 
-node faker,faker2,faker3;
-faker.key_value=0;
-faker2.key_value=0;
-faker3.key_value=0;
-opentree_f.root=&faker;
-opentree_keyval.root=&faker2;
-master_tree.root=&faker3;
-astar(&faker,120490,opentree_f,opentree_keyval,closedtree,master_tree); // the number her is the goal cordinate =(500*y)+x
-
+astar(&faker,30,opentree_f,opentree_keyval,closedtree,master_tree); // the number her is the goal cordinate =(500*y)+x
+/*int curpos=20;
+node *us;
+us=new node;
+us=master_tree.search_node(120490,master_tree.root);
+while(curpos!=0)
+{
+curpos=us->route_parent_key;
+cout<<endl<<"("<<us->key_value%width<<","<<us->key_value/width<<")";
+us=master_tree.search_node(curpos,master_tree.root);
+}*/
 }
 
