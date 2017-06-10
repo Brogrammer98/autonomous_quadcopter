@@ -574,7 +574,7 @@ void astar(node *current_node,int goal,btree &opentree_f,btree &opentree_keyval,
                   x=(int)t%width +i;
                   y=(int)t/width +j;
 
-                  gl =current_node->g +i*i +j*j;// distance from sucesso
+                  gl =i*i +j*j;// distance from sucesso
                   hl =sqrt(pow(goalx-x,2) + pow(goaly-y,2));
                   fl =0.01*gl+hl;
                   if(x>=0&&y>=0&&x<width&&y<height&&key!=t)
