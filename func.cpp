@@ -3,6 +3,20 @@
 #include <iostream>
 #include <math.h>
 #include <stdlib.h>
+#include <vector>
+#include <list>
+#include <deque>
+
+#include "a_star/waypoint_data.h"
+#include "a_star/pathdata_array.h"
+
+#include "opencv2/core/core.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
+#include "opencv2/highgui/highgui.hpp"
+
+#include <time.h>
+#include <std_msgs/Float64MultiArray.h>
+#include <std_msgs/Bool.h>
 
 using namespace std;
 
@@ -54,6 +68,7 @@ class btree
           void insert_f(int key,float fval,float gval,float hval,node *rot);
           void insert_f(int key,float fval,float x,float gval,float hval,node *rot);
           void destroy_leaf_f(int key,float fval , node *rot);
+          void destroy_whole(node *rot);
           float return_f(int key,node *rot);
           bool search_bool(int key,node *rot);
           bool search_keyval_fval_comp(int key,float fval,node *rot);
@@ -551,6 +566,26 @@ bool btree::search_keyval_fval_comp(int key,float fval, node *rot)
   }
 }
 
+void btree::destroy_whole(node *rot)
+{
+  if(rot->left)
+    destroy_whole(rot->left);
+  if(rot->right)
+    destroy_whole(rot->right);
+  if(!rot->left&&!rot->right)
+  {
+    if(!rot->tree_parent)
+      rot=nullptr;
+    else
+      {
+        if(rot==rot->tree_parent->left)
+        rot->tree_parent->left=nullptr;
+        if(rot==rot->tree_parent->right)
+        rot->tree_parent->right=nullptr;
+      }
+  }
+}
+
 void astar(node *current_node,int goal,btree &opentree_f,btree &opentree_keyval,btree &closedtree,btree &master_tree)
 {   //usleep(100);
     int curr_xpos=(int)current_node->key_value%width;
@@ -761,19 +796,28 @@ void map_to_plan(const nav_msgs::OccupancyGrid::ConstPtr& map_in)
   }
 }
 
+void copy_cordinates(const std_msgs::Float64MultiArray::ConstPtr& array,float *ar)
+{
+  array=ar;
+}
+
 int main(int argc, char** argv)
 {
   btree opentree_f,closedtree,opentree_keyval,master_tree;
   int goal=stop_xpos+stop_ypos*width;
   
   node first;
-  first.key_value=100000;
+  first.key_value=99;
   closedtree.root=&first;
 
+  node cur;
+  cur.key_value=width/2;
+
+
   node faker,faker2,faker3;
-  faker.key_value=0;
-  faker2.key_value=0;   // make necessary corrections here 
-  faker3.key_value=0;
+  faker.key_value=width/2;
+  faker2.key_value=width/2;   // make necessary corrections here 
+  faker3.key_value=width/2;
   opentree_f.root=&faker;
   opentree_keyval.root=&faker2;
   master_tree.root=&faker3;
@@ -791,22 +835,14 @@ int main(int argc, char** argv)
   
   ros::Publisher pub = n.advertise<std_msgs::Float64MultiArray>("NS_gps", 100);
   ros::Publisher pub2 = n.advertise<std_msgs::Float64MultiArray>("EW_gps", 100);
-  
+  ros::Publisher pub3 =n.advertise<std_msgs::Bool>("rotate_quad", 100);
   ros::Rate loop_rate(10);
 
   while(ros::ok())
   {
-
-
-
     if (new_path_required == true && goal_set == true && map_received == true)
-    {
-      astar()//   <=add relevant arguments here 
-      pub1.publish(path_stat);            
-      pub.publish(plannedpath);
-      map_received = false;
-      goal_set = false;
-    } 
+      astar(&cur,goalx+goaly*width,opentree_f,opentree_keyval,closedtree,master_tree);//   <=add relevant arguments here 
+     
   int pathvec[],size=0,curpos;
   node *us;
   us=new node;
@@ -829,15 +865,24 @@ int main(int argc, char** argv)
 
     std_msgs::Float64MultiArray gps_vector_ew;
     std_msgs::Float64MultiArray gps_vector_ns;
-        
-   for(int i=0;i<size;i++)
-   {
-    gps_vector_ns.data.push_back(goalgpsNS[i]);
-    gps_vector_ew.data.push_back(goalgpsEW[i]);
-   }
-  
+    std_msgs::Bool rotate_quad_msgs;    
+   
+    copy_cordinates(gps_vector_ns,goalgpsNS);
+    copy_cordinates(gps_vector_ew,goalgpsEW);
+    rotate_quad_msgs=rotate_quad;
+
   pub.publish(gps_vector_ns);
   pub1.publish(gps_vector_ew);
+  pub3.publish(rotate_quad_msgs);
+
+      map_received = false;
+      goal_set = false;
+      rotate_quad=false;
+
+  opentree_keyval.destroy_whole(opentree_keyval.root);
+  opentree_f.destroy_whole(opentree_f.root);
+  master_tree.destroy_whole(master_tree.root);
+  closedtree.destroy_whole(closedtree.root);    
 
   ros::spinOnce();
   loop_rate.sleep();
