@@ -4,18 +4,21 @@
 #include <math.h>
 #include <stdlib.h>
 
-int INT_MAX =9999999;
-float a[8]={-499,-1,499,-500,500,-501,1,501};
-float b[8]={1.4,1,1.4,1,1,1.4,1,1.4};
 using namespace std;
 
 const float pi = 3.14159265;
 const float RAD_TO_DEG = 180.0/pi;
 const float DEG_TO_RAD = pi/180.0;
+float currentgpsNS=0;
+float currentgpsEW=0;
+float goalgpsEW=0;
+float goalgpsNS=0;
 
 int    width      = 500;
 int    height     = 500;
-
+float Re=6400000;
+float distance_to_plan_real =10;
+float distance_to_plan=distance_to_plan_real*20;
 
 int map_data[250000];
 
@@ -201,7 +204,7 @@ void btree::insert_keyval(int key,float fval,float gval,float hval,node *rot)
        return;
       }
     }
-
+`
     if(key==rot->key_value)
     {//cout<<"an insertion   ("<<key%width<<","<<key/width<<")"<<endl;
     rot->f=fval;
@@ -341,7 +344,7 @@ void btree::insert_f(int key,float fval,float x,float gval,float hval,node *rot)
 bool btree::search_bool(int key,node *rot)
 {
 if(key==rot->key_value)
-  return true;
+ return true;
 
 else
   {
@@ -620,75 +623,224 @@ void astar(node *current_node,int goal,btree &opentree_f,btree &opentree_keyval,
     }
    }
 }
+bool rotate_quad=false;
 
+void set_goal(const a_star::waypoint_data::ConstPtr& waypointdata)  // <----- add some aruments here    optimise this by exact local destination within lical masomp
+{  
+  float des_head=0; 
+    des_head = waypointdata->angle;
+  if (map_received == true && currhead_received == true && goal_set == false) // <- how or where to assign these boolean values ?
+  {
+    if(distance_to_plan<=1.41*height*map_res)
+    { 
+      stop_ypos = int((distance_to_plan*cos((curr_head-des_head)*DEG_TO_RAD))/map_res);
+      stop_xpos = int((distance_to_plan*sin((curr_head-des_head)*DEG_TO_RAD))/map_res)+(int)width/2;
 
+      if (stop_ypos>=height)
+       stop_ypos = height - 1;  
 
+      if(stop_xpos>=width)
+       stop_xpos = width - 1;   
 
-
-
-int main()
-{
-btree opentree_f,closedtree,opentree_keyval,master_tree;
-
-node first;
-first.key_value=100000;
-closedtree.root=&first;
-
-node faker,faker2,faker3;
-faker.key_value=0;
-faker2.key_value=0;
-faker3.key_value=0;
-opentree_f.root=&faker;
-opentree_keyval.root=&faker2;
-master_tree.root=&faker3;
-
-/*
--------------------------------------------------------------------------------------------
-  instead of the foollowing lines of code add code that makes map_data[iterator]=1 where
-             obstacle is there
----------------------------------------------------------------------------------------------
-*/
-
-
- for(int i=0;i<250000;i++)
-    map_data[i]=0;
-
-  for (int i =1; i < 200; ++i)
-    map_data[i+100000]=1;
-
-    int i=0;
-    while(i<250000)
-    {
-
-     if(map_data[i]!=0)
-       closedtree.insert_keyval(i,i,i,i,closedtree.root);
-
-     i+=1;
+       if(stop_ypos<0)
+       {
+        rotate_quad=true;
+        goalfound=false;
+       } // fixed it at the top if it is outta bounds 
     }
-//closedtree.destroy_leaf_f(100004,-100004,closedtree.root);
-/*node *ud;
-ud=new node;
-//ud=closedtree.root;
-ud=closedtree.minnode(closedtree.root);
-while(ud)
-{
-cout<<endl<<ud->key_value<<endl;
-closedtree.destroy_leaf_keyval(ud->key_value,closedtree.root);
-cout<<"youo";
-ud=closedtree.minnode(closedtree.root);
-//ud=ud->left;
-}*/
-
-astar(&faker,120000,opentree_f,opentree_keyval,closedtree,master_tree); // the number her is the goal cordinate =(500*y)+x
-int curpos=20;
-node *us;
-us=new node;
-us=master_tree.search_node(120000,master_tree.root);
-while(curpos!=0)
-{
-curpos=us->route_parent_key;
-cout<<endl<<"("<<us->key_value%width<<","<<us->key_value/width<<")";
-us=master_tree.search_node(curpos,master_tree.root);
+        goalfound=true;  // fixed it at the top if it is outta bounds 
+  }
+ 
+    else 
+    {
+      if(abs((curr_head-des_head))>atan(0.5))
+        {
+          stop_ypos=(int)(width/2)*cot((curr_head-des_head)*DEG_TO_RAD);
+          stop_xpos=width-1;
+      else 
+        {
+          stop_ypos=height-1;
+          stop_xpos=(int)(height)*cot((curr_head-des_head)*DEG_TO_RAD) +(int)width/2;
+        }
+    }
+    if (map_data[stop_ypos*width + stop_xpos] != 0)   
+    { int flag=0;
+     for(int i=0;i<500;i++)
+     {
+       for(int k=-i;k<=i;k++)
+       {
+         for(int j=-i;j<=i;j++)
+         {
+          if((stop_ypos+j >=0)&&(stop_ypos+j <height)&&((stop_xpos+k)<width)&&((stop_xpos+k)>=0))
+          {
+           if(map_data[(stop_ypos+j)*width + (stop_xpos+k)] = 0)
+           {
+            stop_ypos+=j;
+            stop_xpos+=k;
+            flag=1;
+            if(flag!=0)
+             goto jmp;
+            }
+           }   
+         }
+       }
+     }
+   }    jmp: 
+ }    goal_set=true;
 }
+
+float curr_head=0;
+bool currhead_received=false;
+
+void current_heading(const geometry_msgs::Pose2D::ConstPtr& msg)
+{
+  curr_head = msg->theta;
+  currhead_received = true;
+  currentgpsEW=msg->y;
+  currentgpsNS=msg->x;
+}
+
+float* returngpsNS(int vec[],int size)
+{
+  float beta=0.05*1/6400000;
+  float beatap=beta/cos(current_heading);
+
+  float ns[size];
+
+  for(int i=0l i<size;i++ )
+    {
+      int xa,ya;
+      xa=vec[i]%width -curr_xpos;
+      ya=vec[i]/width; 
+      ns[i]=currentgpsNS +beta*(-1*xa*sin(current_heading)+ya*cos(current_heading));
+
+    }  
+return ns;
+}
+float* returngpsEW(int vec[],int size)
+{
+  float beta=0.05*1/6400000;
+  float beatap=beta/cos(current_heading);
+
+  float ns[size];
+
+  for(int i=0l i<size;i++ )
+    {
+      int xa,ya;
+      xa=vec[i]%width -curr_xpos;
+      ya=vec[i]/width; 
+      ns[i]=currentgpsEW +betap*(ya*sin(current_heading)+xa*cos(current_heading));
+    }  
+return ns;
+}
+
+
+
+bool map_received=false;
+
+int startxpos=0;
+int startypos=0;
+
+void map_to_plan(const nav_msgs::OccupancyGrid::ConstPtr& map_in)
+{  
+  if (map_received == false)
+  {
+    width    = map_in->info.width;
+    height   = map_in->info.height;
+    map_res  = map_in->info.resolution;
+    
+    startxpos = (width/2 - 1);
+    
+    for (int i=0;i<(width*height);i++)
+    {
+      if (map_in->data[i] >0)
+        map_data[i] = 1;
+      else map_data[i] = 0;
+    }
+      map_received = true;
+  }
+}
+
+int main(int argc, char** argv)
+{
+  btree opentree_f,closedtree,opentree_keyval,master_tree;
+  int goal=stop_xpos+stop_ypos*width;
+  
+  node first;
+  first.key_value=100000;
+  closedtree.root=&first;
+
+  node faker,faker2,faker3;
+  faker.key_value=0;
+  faker2.key_value=0;   // make necessary corrections here 
+  faker3.key_value=0;
+  opentree_f.root=&faker;
+  opentree_keyval.root=&faker2;
+  master_tree.root=&faker3;
+  
+  ros::init(argc, argv, "astar");
+  ros::NodeHandle n;
+
+  ros::Subscriber sub2 = n.subscribe("/imu/HeadingTrue_degree", 10, current_heading);
+  ros::Subscriber sub3 = n.subscribe("/scan/blown_local_map", 10, map_to_plan); // For sandeep code
+
+  distance_to_plan_real =Re*sqtr( pow(cos(currentgpsNS)*currentgpsEW,2) + pow(currentgpsEW-goalgpsEW ,2) );
+  distance_to_plan=20*distance_to_plan_real;
+
+  ros::Subscriber sub4 = n.subscribe("/waypoint_data", 10, set_goal);
+  
+  ros::Publisher pub = n.advertise<std_msgs::Float64MultiArray>("NS_gps", 100);
+  ros::Publisher pub2 = n.advertise<std_msgs::Float64MultiArray>("EW_gps", 100);
+  
+  ros::Rate loop_rate(10);
+
+  while(ros::ok())
+  {
+
+
+
+    if (new_path_required == true && goal_set == true && map_received == true)
+    {
+      astar()//   <=add relevant arguments here 
+      pub1.publish(path_stat);            
+      pub.publish(plannedpath);
+      map_received = false;
+      goal_set = false;
+    } 
+  int pathvec[],size=0,curpos;
+  node *us;
+  us=new node;
+  us=master_tree.search_node(goalx+goaly*width,master_tree.root);
+  curpos=us->route_parent_key;
+
+  while(curpos!=stop_xpos+stop_ypos*width)
+    {
+     curpos=us->route_parent_key;
+     pathvec[++size]=us->key_value;
+     us=master_tree.search_node(curpos,master_tree.root);
+    }
+  int pathvecfliped[size];
+
+  for(int i=0;i<size;i++)
+    pathvecfliped[i]=pathvec[size-1-i];
+
+  float goalgpsNS=returngpsNS(pathvecfliped,size);
+  float goalgpsEW=returngpsEW(pathvecfliped,size);
+
+    std_msgs::Float64MultiArray gps_vector_ew;
+    std_msgs::Float64MultiArray gps_vector_ns;
+        
+   for(int i=0;i<size;i++)
+   {
+    gps_vector_ns.data.push_back(goalgpsNS[i]);
+    gps_vector_ew.data.push_back(goalgpsEW[i]);
+   }
+  
+  pub.publish(gps_vector_ns);
+  pub1.publish(gps_vector_ew);
+
+  ros::spinOnce();
+  loop_rate.sleep();
+  }
 }
 
