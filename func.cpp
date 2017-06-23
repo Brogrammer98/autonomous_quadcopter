@@ -19,6 +19,7 @@
 #include <std_msgs/Bool.h>
 
 using namespace std;
+using namespace cv;
 
 const float pi = 3.14159265;
 const float RAD_TO_DEG = 180.0/pi;
