@@ -39,7 +39,7 @@ float Re=6400000;
 float distance_to_plan_real =10;
 float distance_to_plan=distance_to_plan_real*20;
 
-int map_data[250000];
+int map_data[width*height];
 
 bool rotate_quad=false;
 
@@ -104,19 +104,20 @@ btree::btree()
   root=(node*) malloc(sizeof(node));
   root=nullptr;
 }
+
 float btree::return_f(int key,node *rot)
 {
-if(key==rot->key_value)
-  return rot->f;
-else
+  if(key==rot->key_value)
+    return rot->f;
+  else
   {
-     if(key>rot->key_value)
-        return search_bool(key,rot->right);
-     else
-        return search_bool(key,rot->left);
-
+    if(key>rot->key_value)
+      return search_bool(key,rot->right);
+    else
+      return search_bool(key,rot->left);
   }
 }
+
 node *btree::minnode(node *rot)
 {
   if(rot->left==nullptr)
