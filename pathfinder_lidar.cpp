@@ -767,7 +767,7 @@ void current_pos(const sensor_msgs::NavSatFix::ConstPtr& info)
 }
 
 
-float *returngpsNS(int vec[],int size)
+float *returngpsNS(int vec[],int size) // the trigonometric funtion to return 
 {
   float beta=0.05*1/6400000;
   float beatap=beta/cos(current_heading);
@@ -846,11 +846,12 @@ int main(int argc, char** argv)
 
   btree opentree_f,closedtree,opentree_keyval,master_tree;
    
-  node first,faker,faker2,faker3;
+  node first,faker,faker2,faker3; // initialization nodes for all the trees
+
    
   first.key_value=width-1;
   faker.key_value=width/2;
-  faker2.key_value=width/2;   // make necessary corrections here 
+  faker2.key_value=width/2;   // make necessary corrections here according to origin references
   faker3.key_value=width/2;
   
   opentree_f.root=&faker;
@@ -928,7 +929,7 @@ int main(int argc, char** argv)
     opentree_f.destroy_whole(opentree_f.root);
     master_tree.destroy_whole(master_tree.root);
     closedtree.destroy_whole(closedtree.root);  
-    if(abs(goalgpsEW-currentgpsEW)<lat_err && abs(goalgpsNS-currentgpsNS))
+    if(abs(goalgpsEW-currentgpsEW)<long_err && abs(goalgpsNS-currentgpsNS)<lat_err)
     {
     	final_goal_found.data=true;
     }
