@@ -41,7 +41,7 @@ float distance_to_plan=distance_to_plan_real*20;
 
 int map_data[width*height];
 
-bool rotate_quad=false;
+//bool rotate_quad=false;
 
 float curr_head=0;
 bool currhead_received=false;
@@ -700,7 +700,7 @@ void set_goal(const a_star::waypoint_data::ConstPtr& waypointdata)  // <----- ad
 
       if(stop_ypos<0)
       {
-        rotate_quad=true;
+        //rotate_quad=true;
         goal_set=false;
       } 
     }
@@ -841,15 +841,11 @@ int goal=stop_xpos+stop_ypos*width;
 
 int main(int argc, char** argv)
 {
-  std_msgs::Bool final_goal_found;
-  final_goal_found.data=false;
-
   btree opentree_f,closedtree,opentree_keyval,master_tree;
    
   node first,faker,faker2,faker3; // initialization nodes for all the trees
 
-   
-  first.key_value=width-1;
+  first.key_value=width-1;  // this may mess up in a special test case when local destination is at bottom right corner
   faker.key_value=width/2;
   faker2.key_value=width/2;   // make necessary corrections here according to origin references
   faker3.key_value=width/2;
@@ -859,11 +855,10 @@ int main(int argc, char** argv)
   master_tree.root=&faker3;
   closedtree.root=&first;
 
-
-  node cur;
+  node cur;               // for the astar argument 
   cur.key_value=width/2;
   
-  ros::init(argc, argv, "astar");
+  ros::init(argc, argv, "pathfinder_lidar");
   ros::NodeHandle n;
 
   ros::Subscriber sub2 = n.subscribe("/mavros/imu/data", 10, current_loc);
@@ -872,9 +867,6 @@ int main(int argc, char** argv)
   ros::Subscriber subpos =n.subscribe("mavros/imu/mag",10,current_dir);
   ros::Subscriber boolros =n.subscribe("bool_pbsh",10,initiate_astar);
 
-  distance_to_plan_real =Re*sqtr( pow(cos(currentgpsNS)*(currentgpsEW-goalgpsEW),2) + pow(currentgpsNS-goalgpsNS,2) );
-  distance_to_plan=20*distance_to_plan_real;
-
   ros::Subscriber sub4 = n.subscribe("/waypoint_data", 10, set_goal);
   
   ros::Publisher pub = n.advertise<std_msgs::Float64>("lat_wp", 100);
@@ -882,11 +874,10 @@ int main(int argc, char** argv)
   //ros::Publisher pub3 =n.advertise<std_msgs::Bool>("rotate_quad", 100);
   ros::Rate loop_rate(10);
 
-  while(ros::ok() && distance_to_plan>dist_thresh)
+  do
   {
-    if(new_path_required == true && goal_set == true && map_received == true && initiate )
-      astar(&cur,stop_xpos+stop_ypos*width,opentree_f,opentree_keyval,closedtree,master_tree);//   <=add relevant arguments here 
-    
+  	if(new_path_required == true && goal_set == true && map_received == true && initiate )
+      astar(&cur,stop_xpos+stop_ypos*width,opentree_f,opentree_keyval,closedtree,master_tree);
     else 
       goto loop_end;		
 
@@ -913,34 +904,32 @@ int main(int argc, char** argv)
 
     std_msgs::Float64 gps_vector_ew;
     std_msgs::Float64 gps_vector_ns;
-    std_msgs::Bool rotate_quad_msgs;    
+    //std_msgs::Bool rotate_quad_msgs;    
   
     copy_cordinates(gps_vector_ns,goalgpsNS);
     copy_cordinates(gps_vector_ew,goalgpsEW);
-    rotate_quad_msgs=rotate_quad;
+    //rotate_quad_msgs=rotate_quad;
 
     pub.publish(gps_vector_ns);
     pub2.publish(gps_vector_ew);
-    pub3.publish(rotate_quad_msgs);
-
-    
+    //pub3.publish(rotate_quad_msgs);
 
     opentree_keyval.destroy_whole(opentree_keyval.root);
     opentree_f.destroy_whole(opentree_f.root);
     master_tree.destroy_whole(master_tree.root);
     closedtree.destroy_whole(closedtree.root);  
     
-
     loop_end:
     map_received = false;
     goal_set = false;
-    rotate_quad=false;  
+    //rotate_quad=false;  
 
     distance_to_plan_real =Re*sqtr( pow(cos(currentgpsNS)*(currentgpsEW-goalgpsEW),2) + pow(currentgpsNS-goalgpsNS,2) );
     distance_to_plan=20*distance_to_plan_real;
 
     ros::spinOnce();
     loop_rate.sleep();
-  }
+
+  }while(ros::ok() && distance_to_plan>dist_thresh);
 }
 
