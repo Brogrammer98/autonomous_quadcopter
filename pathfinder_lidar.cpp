@@ -877,12 +877,12 @@ int main(int argc, char** argv)
 
   ros::Subscriber sub4 = n.subscribe("/waypoint_data", 10, set_goal);
   
-  ros::Publisher pub = n.advertise<std_msgs::Float64MultiArray>("lat_wp", 100);
-  ros::Publisher pub2 = n.advertise<std_msgs::Float64MultiArray>("lng_wp", 100);
+  ros::Publisher pub = n.advertise<std_msgs::Float64>("lat_wp", 100);
+  ros::Publisher pub2 = n.advertise<std_msgs::Float64>("lng_wp", 100);
   //ros::Publisher pub3 =n.advertise<std_msgs::Bool>("rotate_quad", 100);
   ros::Rate loop_rate(10);
 
-  while(ros::ok()&& !final_goal_found.data)
+  while(ros::ok() && !final_goal_found.data)
   {
     if(new_path_required == true && goal_set == true && map_received == true && initiate )
       astar(&cur,stop_xpos+stop_ypos*width,opentree_f,opentree_keyval,closedtree,master_tree);//   <=add relevant arguments here 
