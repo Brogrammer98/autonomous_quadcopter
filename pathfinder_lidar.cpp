@@ -860,9 +860,9 @@ int main(int argc, char** argv)
 
   ros::Subscriber sub4 = n.subscribe("/waypoint_data", 10, set_goal);
   
-  ros::Publisher pub = n.advertise<std_msgs::Float64MultiArray>("NS_gps", 100);
-  ros::Publisher pub2 = n.advertise<std_msgs::Float64MultiArray>("EW_gps", 100);
-  ros::Publisher pub3 =n.advertise<std_msgs::Bool>("rotate_quad", 100);
+  ros::Publisher pub = n.advertise<std_msgs::Float64MultiArray>("lat_wp", 100);
+  ros::Publisher pub2 = n.advertise<std_msgs::Float64MultiArray>("lng_wp", 100);
+  //ros::Publisher pub3 =n.advertise<std_msgs::Bool>("rotate_quad", 100);
   ros::Rate loop_rate(10);
 
   while(ros::ok())
