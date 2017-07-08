@@ -850,7 +850,7 @@ int main(int argc, char** argv)
   
   ros::Publisher pub = n.advertise<std_msgs::Float64MultiArray>("NS_gps", 100);
   ros::Publisher pub2 = n.advertise<std_msgs::Float64MultiArray>("EW_gps", 100);
-  ros::Publisher pub3 =n.advertise<std_msgs::Bool>("rotate_quad", 100);
+  //ros::Publisher pub3 =n.advertise<std_msgs::Bool>("rotate_quad", 100);
   ros::Rate loop_rate(10);
 
   while(ros::ok())
