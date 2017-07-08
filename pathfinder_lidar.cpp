@@ -28,8 +28,8 @@ const float DEG_TO_RAD = pi/180.0;
 float currentgpsNS=0;
 float currentgpsEW=0;
 
-float goalgpsEW=0;
-float goalgpsNS=0;
+float goalgpsEW=0; // edit these before burning the code 
+float goalgpsNS=0; // edit these before burning the code 
 
 
 int    width      = 500;
@@ -822,14 +822,28 @@ void map_to_plan(const nav_msgs::OccupancyGrid::ConstPtr& map_in)
   }
 }
 
-void copy_cordinates(const std_msgs::Float64MultiArray::ConstPtr& array,float *ar)
+void copy_cordinates(const std_msgs::Float64::ConstPtr& array,float *ar)
 {
-  array=ar;
+  array=ar[0];
 }
+
+bool initiate=false;
+
+void initiate_astar(const std_msgs::Bool::ConstPtr& call)
+{
+	initiate=call->data;
+}
+
+
+float long_err=0,lat_err=0; // please set some threshold here 
+
 int goal=stop_xpos+stop_ypos*width;
 
 int main(int argc, char** argv)
 {
+  std_msgs::Bool final_goal_found;
+  final_goal_found.data=false;
+
   btree opentree_f,closedtree,opentree_keyval,master_tree;
    
   node first,faker,faker2,faker3;
@@ -844,6 +858,7 @@ int main(int argc, char** argv)
   master_tree.root=&faker3;
   closedtree.root=&first;
 
+
   node cur;
   cur.key_value=width/2;
   
@@ -853,7 +868,8 @@ int main(int argc, char** argv)
   ros::Subscriber sub2 = n.subscribe("/mavros/imu/data", 10, current_loc);
   ros::Subscriber sub3 = n.subscribe("/scan/blown_local_map", 10, map_to_plan); // from yashwant code 
   ros::Subscriber sub  = n.subscribe("/mavros/global_position/raw/fix", 1, current_pos); // check what must be the buffer size 
-  ros::Subscriber subpos =n.subscribe("mavros/imu/mag",10,current_dir)
+  ros::Subscriber subpos =n.subscribe("mavros/imu/mag",10,current_dir);
+  ros::Subscriber boolros =n.subscribe("bool_pbsh",10,initiate_astar);
 
   distance_to_plan_real =Re*sqtr( pow(cos(currentgpsNS)*currentgpsEW,2) + pow(currentgpsEW-goalgpsEW ,2) );
   distance_to_plan=20*distance_to_plan_real;
@@ -865,11 +881,14 @@ int main(int argc, char** argv)
   //ros::Publisher pub3 =n.advertise<std_msgs::Bool>("rotate_quad", 100);
   ros::Rate loop_rate(10);
 
-  while(ros::ok())
+  while(ros::ok()&& !final_goal_found.data)
   {
-    if(new_path_required == true && goal_set == true && map_received == true)
+    if(new_path_required == true && goal_set == true && map_received == true && initiate )
       astar(&cur,stop_xpos+stop_ypos*width,opentree_f,opentree_keyval,closedtree,master_tree);//   <=add relevant arguments here 
-     
+    
+    else 
+      goto loop_end;		
+
     int pathvec[],size=0,curpos;
     node *us;
     us=new node;
@@ -891,8 +910,8 @@ int main(int argc, char** argv)
     float goalgpsNS=returngpsNS(pathvecfliped,size);
     float goalgpsEW=returngpsEW(pathvecfliped,size);
 
-    std_msgs::Float64MultiArray gps_vector_ew;
-    std_msgs::Float64MultiArray gps_vector_ns;
+    std_msgs::Float64 gps_vector_ew;
+    std_msgs::Float64 gps_vector_ns;
     std_msgs::Bool rotate_quad_msgs;    
   
     copy_cordinates(gps_vector_ns,goalgpsNS);
@@ -903,14 +922,21 @@ int main(int argc, char** argv)
     pub2.publish(gps_vector_ew);
     pub3.publish(rotate_quad_msgs);
 
-    map_received = false;
-    goal_set = false;
-    rotate_quad=false;
+    
 
     opentree_keyval.destroy_whole(opentree_keyval.root);
     opentree_f.destroy_whole(opentree_f.root);
     master_tree.destroy_whole(master_tree.root);
-    closedtree.destroy_whole(closedtree.root);    
+    closedtree.destroy_whole(closedtree.root);  
+    if(abs(goalgpsEW-currentgpsEW)<lat_err && abs(goalgpsNS-currentgpsNS))
+    {
+    	final_goal_found.data=true;
+    }
+
+    loop_end:
+    map_received = false;
+    goal_set = false;
+    rotate_quad=false;  
 
     ros::spinOnce();
     loop_rate.sleep();
