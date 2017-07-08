@@ -752,9 +752,9 @@ float magz,magx,magy;
 
 void current_dir(const sensor_msgs::MagneticField::ConstPtr& mag)
 {
-  magx=mag->magnetic_field[0];
-  magy=mag->magnetic_field[1];
-  magz=mag->magnetic_field[2];
+  magx=mag->magnetic_field.x;  
+  magy=mag->magnetic_field.y;
+  magz=mag->magnetic_field.z;
 
   curr_head = atan(magz/magx);
   currhead_received = true;
