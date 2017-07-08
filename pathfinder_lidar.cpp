@@ -1,4 +1,4 @@
-#include <unistd.h>-
+f#include <unistd.h>-
 #include <stdio.h>
 #include <iostream>
 #include <math.h>
@@ -56,7 +56,6 @@ int stopxpos=0;
 int stopypos=0;
 
 float des_head=0;
-float curr_head=0;
 
 struct node
 {
@@ -749,13 +748,24 @@ void set_goal(const a_star::waypoint_data::ConstPtr& waypointdata)  // <----- ad
   }    goal_set=true;
 }
 
-void current_heading(const geometry_msgs::Pose2D::ConstPtr& msg)
+float magz,magx,magy;
+
+void current_dir(const sensor_msgs::MagneticField::ConstPtr& mag)
 {
-  curr_head = msg->theta;
+  magx=mag->magnetic_field[0];
+  magy=mag->magnetic_field[1];
+  magz=mag->magnetic_field[2];
+
+  curr_head = atan(magz/magx);
   currhead_received = true;
-  currentgpsEW=msg->y;
-  currentgpsNS=msg->x;
 }
+
+void current_pos(const sensor_msgs::NavSatFix::ConstPtr& info)
+{
+  currentgpsEW=info->latitude;
+  currentgpsNS=info->longitude;
+}
+
 
 float *returngpsNS(int vec[],int size)
 {
@@ -764,7 +774,7 @@ float *returngpsNS(int vec[],int size)
 
   float ns[size];
 
-  for(int i=0l i<size;i++ )
+  for(int i=0;i<size;i++)
   {
     int xa,ya;
     xa=vec[i]%width -curr_xpos;
@@ -840,8 +850,10 @@ int main(int argc, char** argv)
   ros::init(argc, argv, "astar");
   ros::NodeHandle n;
 
-  ros::Subscriber sub2 = n.subscribe("/imu/HeadingTrue_degree", 10, current_heading);
-  ros::Subscriber sub3 = n.subscribe("/scan/blown_local_map", 10, map_to_plan); // For sandeep code
+  ros::Subscriber sub2 = n.subscribe("/mavros/imu/data", 10, current_loc);
+  ros::Subscriber sub3 = n.subscribe("/scan/blown_local_map", 10, map_to_plan); // from yashwant code 
+  ros::Subscriber sub  = n.subscribe("/mavros/global_position/raw/fix", 1, current_pos); // check what must be the buffer size 
+  ros::Subscriber subpos =n.subscribe("mavros/imu/mag",10,current_dir)
 
   distance_to_plan_real =Re*sqtr( pow(cos(currentgpsNS)*currentgpsEW,2) + pow(currentgpsEW-goalgpsEW ,2) );
   distance_to_plan=20*distance_to_plan_real;
@@ -855,7 +867,7 @@ int main(int argc, char** argv)
 
   while(ros::ok())
   {
-    if (new_path_required == true && goal_set == true && map_received == true)
+    if(new_path_required == true && goal_set == true && map_received == true)
       astar(&cur,stop_xpos+stop_ypos*width,opentree_f,opentree_keyval,closedtree,master_tree);//   <=add relevant arguments here 
      
     int pathvec[],size=0,curpos;
