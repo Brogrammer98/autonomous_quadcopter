@@ -15,7 +15,7 @@ f#include <unistd.h>-
 #include "opencv2/highgui/highgui.hpp"
 
 #include <time.h>
-#include <std_msgs/Float64MultiArray.h>
+#include <std_msgs/Float64.h>
 #include <std_msgs/Bool.h>
 
 using namespace std;
