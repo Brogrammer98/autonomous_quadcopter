@@ -824,7 +824,7 @@ void map_to_plan(const nav_msgs::OccupancyGrid::ConstPtr& map_in)
 
 void copy_cordinates(const std_msgs::Float64::ConstPtr& array,float *ar)
 {
-  array=ar[0];
+  array=ar[0]; //is the first item of ar being deleted somewhere in the code?? 
 }
 
 bool initiate=false;
@@ -864,7 +864,7 @@ int main(int argc, char** argv)
   ros::Subscriber sub2 = n.subscribe("/mavros/imu/data", 10, current_loc);
   ros::Subscriber sub3 = n.subscribe("/scan/blown_local_map", 10, map_to_plan); // from yashwant code 
   ros::Subscriber sub  = n.subscribe("/mavros/global_position/raw/fix", 1, current_pos); // check what must be the buffer size 
-  ros::Subscriber subpos =n.subscribe("mavros/imu/mag",10,current_dir);
+  ros::Subscriber subpos =n.subscribe("mavros/imu/mag",10,current_dir); // is there a / before mavros?
   ros::Subscriber boolros =n.subscribe("bool_pbsh",10,initiate_astar);
 
   ros::Subscriber sub4 = n.subscribe("/waypoint_data", 10, set_goal);
